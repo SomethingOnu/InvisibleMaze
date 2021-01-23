@@ -1,0 +1,1022 @@
+
+	development_mode = 0 // 開発モード (0:オフ／製品用 , 1:オン／開発用)
+
+	if development_mode = 1 {
+		delete "hsptmp"
+		delete "obj"
+	}
+
+//================================================================
+// 定義
+//================================================================
+
+// データ
+//----------------------------------------------------------------
+
+	#packopt name "Invisible Maze (Stage Maker)"
+	#packopt icon "bin-Icon.ico"
+
+	#pack "pgm-SM.hsp"
+	#pack "pgm-Graphic.hsp"
+
+	#pack "tex-Block.bmp"
+	#pack "tex-Char.bmp"
+	#pack "tex-Title.bmp"
+	#pack "tex-UI.bmp"
+
+	#pack "snd-Move.wav"
+	#pack "snd-Select.wav"
+	#pack "snd-Step.wav"
+
+	#pack "Stage-Tmp04.txt"
+	#pack "Stage-Tmp06.txt"
+	#pack "Stage-Tmp08.txt"
+	#pack "Stage-Tmp10.txt"
+
+// その他
+//----------------------------------------------------------------
+
+	title_name = "Invisible Maze - Stage Maker" // タイトル
+	version = "1.0.0" // バージョン
+	font_name = "Courier" // フォント
+
+	#define ChipSize 16*zoom // チップのサイズ
+	#define MapSizeX 20 // マップのXサイズ
+	#define MapSizeY 15 // マップのYサイズ
+
+	#include "mod-waitFPS.hsp"
+
+	fps = 15 // フレーム数
+
+	fps_config fps
+
+	zoom = 1 // 画面拡大率
+
+	#include "hsp3util.as" // アニメーション用のASファイル
+
+//================================================================
+// 画面データ
+//================================================================
+
+*Reload
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+	randomize
+
+ 	// 画面サイズ : 320(16*20)*240(16*15)
+
+	winX = ChipSize*MapSizeX
+	winY = ChipSize*MapSizeY
+
+	// 画面ポジション : ディスプレイの中央
+
+	posX = (ginfo_dispx-winX)/2
+	posY = (ginfo_dispy-winY)/2
+
+	screen 0 , winX,winY , 0 , posX,posY
+	title title_name
+
+	font font_name , 16*zoom
+
+//================================================================
+// 定義
+//================================================================
+
+// 画像関係
+//----------------------------------------------------------------
+
+	buffer 11 // ブロックのテクスチャー
+		picload "tex-Block.bmp"
+		gsel 0
+
+	buffer 12 // キャラクターのテクスチャー
+		picload "tex-Char.bmp"
+		gsel 0
+
+	buffer 13 // タイトルのテクスチャー
+		picload "tex-Title.bmp"
+		gsel 0
+
+	buffer 14 // UIのテクスチャー
+		picload "tex-UI.bmp"
+		gsel 0
+
+	buffer 1 // ブロックのテクスチャー (描画用)
+		gzoom 128*zoom,128*zoom , 11 , 0,0 , 128,128
+		gsel 0
+
+	buffer 2 // キャラクターのテクスチャー (描画用)
+		gzoom 128*zoom,128*zoom , 12 , 0,0 , 128,128
+		gsel 0
+
+	buffer 3 // タイトルのテクスチャー (描画用)
+		gzoom 256*zoom,256*zoom , 13 , 0,0 , 256,256
+		gsel 0
+
+	buffer 4 // UIのテクスチャー (描画用)
+		gzoom 256*zoom,256*zoom , 14 , 0,0 , 256,256
+		gsel 0
+
+	buffer 5 , ChipSize*MapSizeX,ChipSize*MapSizeY // フェード用
+		color 0,0,0
+		boxf 0,0 , ChipSize*MapSizeX,ChipSize*MapSizeY
+		gsel 0
+
+// 音楽関係
+//----------------------------------------------------------------
+
+	se_vol = -500 // SEの音量
+
+	mmload "snd-Move.wav" , 1 , 0 // セレクトカーソルの移動音
+	mmvol 1 , se_vol
+
+	mmload "snd-Select.wav" , 2 , 0 // セレクトカーソルの決定音
+	mmvol 2 , se_vol
+
+	mmload "snd-Step.wav" , 3 , 0 // 足音
+	mmvol 3 , 0
+
+//================================================================
+// 設定
+//================================================================
+
+	debug = 1 // デバッグモード (0:通常 , 1:デバッグモード)
+
+	easy_mode = 0 // 難易度 (0:ノーマル , 1:イージー)
+
+//================================================================
+// 初期設定
+//================================================================
+
+*setStageSize
+
+//	stage_name = "Stage001.txt" // 初期ステージファイル
+
+	key = 0
+	check_key = 0
+	skip_key = 0
+
+	change_zoom = 0 // ズームが切り替えられたか
+
+	anime_frame = 0 // アニメーションフレーム (0~16)
+
+	frame_cnt = 0 // フェード用のアニメーションフレーム (0~255)
+
+	jump_anime = 0
+
+	cx = 4 // セレクトカーソルのX座標 (0~20)
+	cy = 7 // セレクトカーソルのY座標 (0~15)
+	cm = 0 // セレクトカーソルの動作 (0:移動可能 , 1:移動不可能 , 2:移動中)
+
+	sbx = 0 // スクロールバーのX座標 (0~20)
+	sby = 0 // スクロールバーのY座標 (0~15)
+	sbh = 0 // スクロールバーの縦幅
+	sbw = 0 // スクロールバーの横幅
+
+	mbx = 0 // テキストボックスのX座標 (0~20)
+	mby = 0 // テキストボックスのY座標 (0~15)
+	mbh = 0 // テキストボックスの縦幅
+	mbw = 0 // テキストボックスの横幅
+
+	tx = 5 // テキストのX座標 (0~20)
+	ty = 8 // テキストのY座標 (0~15)
+
+	save_stage_cnt = 001 // セーブ用ステージ番号カウント
+
+//================================================================
+// 画面初期化
+//================================================================
+
+	#include "Pgm-graphic.hsp"
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+//================================================================
+// テンプレートを選択
+//================================================================
+
+	repeat
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// メニュー
+//----------------------------------------------------------------
+
+	color 255,255,255
+	pos 0*ChipSize,0*ChipSize
+	mes "Select Stage Size"
+
+	color 255,255,255
+	pos 0*ChipSize,2*ChipSize
+	mes "4x4   : [1]"
+
+	color 255,255,255
+	pos 0*ChipSize,3*ChipSize
+	mes "6x6   : [2]"
+
+	color 255,255,255
+	pos 0*ChipSize,4*ChipSize
+	mes "8x8   : [3]"
+
+	color 255,255,255
+	pos 0*ChipSize,5*ChipSize
+	mes "10x10 : [4]"
+
+	color 255,255,255
+	pos 0*ChipSize,7*ChipSize
+	mes "Create Stage Num : [<] " + strf("%03d",save_stage_cnt) + " [>]" // 生成するステージの開始番号
+
+	color 255,255,255
+	pos 0*ChipSize,14*ChipSize
+	mes "Ver " + version // バージョン
+
+// 操作
+//----------------------------------------------------------------
+
+	getkey change_zoom , 90 // 画面拡大率を変更
+	if ginfo(2) != -1 { if change_zoom = 1 {
+		switch zoom
+			case 1 : zoom = 2 : repeat 4 : fps_wait : loop : swbreak
+			case 2 : zoom = 1 : repeat 4 : fps_wait : loop : swbreak
+		swend
+		goto *Reload
+	} }
+
+	if ginfo(2) != -1 {
+
+		check_key = 0
+
+		if num_check_key != -4 : check_key = 1
+
+		num_check_key = 0
+
+		num = -1
+
+		getkey key1 , 49 : if key1 = 1 { num = 1 : num_check_key += 1 } else { num_check_key -= 1 }
+		getkey key2 , 50 : if key2 = 1 { num = 2 : num_check_key += 1 } else { num_check_key -= 1 }
+		getkey key3 , 51 : if key3 = 1 { num = 3 : num_check_key += 1 } else { num_check_key -= 1 }
+		getkey key4 , 52 : if key4 = 1 { num = 4 : num_check_key += 1 } else { num_check_key -= 1 }
+
+		if cm != 2 & anime_frame = 0 & check_key = 0 & num_check_key = -2 {
+
+			switch num
+				case 1
+					stage_name = "Stage-Tmp04.txt"
+					if se_mute = 0 : mmplay 2
+					num = -1
+					goto *setGame
+				swbreak
+				case 2
+					stage_name = "Stage-Tmp06.txt"
+					if se_mute = 0 : mmplay 2
+					num = -1
+					goto *setGame
+				swbreak
+				case 3
+					stage_name = "Stage-Tmp08.txt"
+					if se_mute = 0 : mmplay 2
+					num = -1
+					goto *setGame
+				swbreak
+				case 4
+					stage_name = "Stage-Tmp10.txt"
+					if se_mute = 0 : mmplay 2
+					num = -1
+					goto *setGame
+				swbreak
+			swend
+
+		}
+
+	}
+
+	stick key , 15 // ゲームキーを使用
+
+	if cm != 2 & anime_frame = 0 & check_key = 0 {
+
+		switch key
+
+			case 1 // ←
+				if save_stage_cnt != 001 : save_stage_cnt -= 1
+			swbreak
+
+			case 4 // →
+				if save_stage_cnt != 999 : save_stage_cnt += 1
+			swbreak
+
+		swend
+
+	}
+
+	if key != 0 : check_key = 1
+
+	fps_wait
+
+	redraw 1
+
+	loop
+
+//================================================================
+// ゲームデータ
+//================================================================
+
+*setGame
+
+// 設定
+//----------------------------------------------------------------
+
+	success = 0 // 結果 (0:待機中 , 1:ゲーム中 , 2:ゲーム成功 , 3:ゲーム失敗 , 4:次のゲームへ)
+	dangerous_cnt = 0 // 詰みの危険性 (4:詰み)
+
+	wait_cnt = 1 // ゲーム失敗時用
+
+	getstr stage_name_num , stage_name , 9 , '.' // ステージ名をステージ番号へ
+
+//================================================================
+// マップを読み込む
+//================================================================
+
+	sdim data // マップ用のバッファを作成
+	notesel data // マップ用のバッファを指定
+	noteload stage_name // マップを読み込む
+
+	dim map , MapSizeX,MapSizeX // マップの配列変数を用意
+
+	// マップデータを変数に割り当てる
+
+	lx = 0 // データのX値
+	ly = 0 // データのY値
+
+	repeat length(map)
+		noteget ll , ly // 読み込むデータの行
+		li = 0 // データの区切りに0を代入
+		repeat length2(map)
+			getstr ld , ll , li , ',' // 読み込むデータの列(値)
+			li += strsize // 次のデータを参照するためにインデックスを追加
+			map(lx,ly) = int(ld) // 値を変換
+			lx += 1 // 次の列へ
+		loop
+		ly += 1 : lx = 0 // 次の行へ
+	loop
+
+	noteget start_point , 15
+		getstr cx , start_point , 0 , ',' : cx = int(cx)
+		getstr cy , start_point , 3 , ',' : cy = int(cy)
+
+	noteget block_cnt , 16 : block_cnt = int(block_cnt)
+
+	block_cnt += 1 // 歩数調整
+
+	dim data // メモリーを解放
+
+	ll = 0 // データの行
+	li = 0 // データの区切り
+	ld = 0 // 結果
+
+//================================================================
+// キャラクターデータ
+//================================================================
+
+	cd = 0 // キャラクターの向き (0:下 , 1:上 , 2:左 , 3:右)
+	ca = 0 // キャラクターのアニメーション番号 (0~3)
+	cm = 0 // キャラクターの動作 (0:移動可能 , 1:移動不可能 , 2:移動中)
+
+	start_cnt = 8 // ゲーム開始までのカウントダウン
+	cx -= start_cnt // 初期位置
+
+	anime_frame = 0 // アニメーションフレーム (0~16)
+
+//================================================================
+// ブロックデータ
+//================================================================
+
+	drop_block_anime = 0 // ブロックの落下アニメーション番号
+
+//================================================================
+// 画面初期化
+//================================================================
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+//================================================================
+// ステージ名を表示
+//================================================================
+
+	if skip_show_stage_num = 1 : goto *startGameIntroPerformance // リトライの場合はスキップ
+
+	if skip_show_stage_num = 0 { // 初回だけステージ名を表示
+
+		color 255,255,255
+		pos 0*ChipSize,14*ChipSize
+		text 75
+		emes "Stage : " + stage_name_num + "x" + stage_name_num // ステージ名
+
+		skip_show_stage_num = 1
+
+		repeat 16 : fps_wait : loop
+
+		repeat 16
+			gosub *FadeOut // フェードアウト
+			fps_wait
+		loop
+
+		frame_cnt = 0
+
+		repeat 4 : fps_wait : loop
+
+	}
+
+//================================================================
+// ゲーム：開始演出
+//================================================================
+
+*startGameIntroPerformance
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *Animation // アニメーション
+	gosub *drawMap // マップを描画
+	gosub *drawChar1 // キャラクターを描画
+	if start_cnt != 0 : gosub *FadeIn // フェードイン
+	gosub *commandGameResult // メニュー
+
+	if debug = 1 : gosub *debugGameDisplay // デバッグ用
+
+	if start_cnt <= 0 { if anime_frame = 0 { // 演出が完了したらゲーム開始
+		frame_cnt = 0
+		goto *Game
+	} }
+
+	if cm = 0 { // スタートまで進む
+		cm = 2
+		cx += 1
+		cd = 3
+		anime_frame = 16
+		start_cnt -= 1
+	}
+
+	fps_wait
+
+	redraw 1
+
+goto *startGameIntroPerformance
+
+//================================================================
+// ゲーム
+//================================================================
+
+*Game
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 描画
+//----------------------------------------------------------------
+
+	if success <= 1 { // ゲーム実行中
+		gosub *Animation // アニメーション
+		gosub *drawMap // マップを描画
+		gosub *commandGame // 操作＆確認
+		gosub *drawChar1 // キャラクターを描画
+		if ca = 3 : cm = 0 // キャラクターが動き終わったら移動可能
+	} else { goto *GameResult }
+
+	if debug = 1 : gosub *debugGameDisplay // デバッグ用
+
+	fps_wait
+
+	redraw 1
+
+goto *Game
+
+//================================================================
+// ゲーム：結果
+//================================================================
+
+*GameResult
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 描画
+//----------------------------------------------------------------
+
+	if debug = 1 : gosub *debugGameDisplay // デバッグ用
+
+	fps_wait
+
+	redraw 1
+
+goto *GameResult
+
+//================================================================
+// デバッグ用
+//================================================================
+
+*debugGameDisplay
+
+	color 0,255,0
+	pos 0*ChipSize,0*ChipSize
+	mes "Stage Maker"
+
+	mes "Key : "
+	mes "Block : " + block_cnt
+
+return
+
+//================================================================
+// 操作＆確認
+//================================================================
+
+*commandGame
+
+	check_key = 0
+
+	if key != 0 : check_key = 1
+
+	stick key , 15 // ゲームキーを使用
+
+	switch key
+
+		case 1024 // TAB : リトライ
+			if debug = 1 {
+				color 0,255,0
+				pos 0*ChipSize,1*ChipSize
+				mes "Key : TAB"
+			}
+			if success = 1 : goto *setGame
+		swbreak
+
+		case 32 // ENTER : リトライ
+			if debug = 1 {
+				color 0,255,0
+				pos 0*ChipSize,1*ChipSize
+				mes "Key : ENTER"
+			}
+			if success = 1 : goto *setGame
+		swbreak
+
+		case 128 // ESC : ゲームを終了する
+			goto *exitGame
+		swbreak
+
+		case 64 // CTRL : ゲームを終了する
+			goto *exitGame
+		swbreak
+
+		case 16 // SPACE : ステージを保存する
+			gosub *saveStage
+		swbreak
+
+	swend
+
+	if cm != 2 { // 移動中は操作不可能
+
+		if key >= 1 : gosub *checkGameMove
+
+		if cm = 0 { if anime_frame = 0 { if check_key = 0 {
+
+			switch key
+
+				case 1 // ←
+					if easy_mode = 0 { if cd != 3 { // 通常の場合、180°の移動は禁止
+						cm = 2
+						cx -= 1
+						cd = 2
+						anime_frame = 12
+						if cx < 0 : cx = 0
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Left"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					} }
+					if easy_mode = 1 { //イージーモードの場合、180°の移動は可能
+						cm = 2
+						cx -= 1
+						cd = 2
+						anime_frame = 12
+						if cx < 0 : cx = 0
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Left"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					}
+				swbreak
+
+				case 2 // ↑
+					if easy_mode = 0 { if cd != 0 { // 通常の場合、180°の移動は禁止
+						cm = 2
+						cy -= 1
+						cd = 1
+						anime_frame = 12
+						if cy < 0 : cy = 0
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Up"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					} }
+					if easy_mode = 1 { //イージーモードの場合、180°の移動は可能
+						cm = 2
+						cy -= 1
+						cd = 1
+						anime_frame = 12
+						if cy < 0 : cy = 0
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Up"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					}
+				swbreak
+
+				case 4 // →
+					if easy_mode = 0 { if cd != 2 { // 通常の場合、180°の移動は禁止
+						cm = 2
+						cx += 1
+						cd = 3
+						anime_frame = 12
+						if cx >= 20 : cx = 19
+						block_cnt += 1
+						if success = 0 : success = 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Right"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					} }
+					if easy_mode = 1 { //イージーモードの場合、180°の移動は可能
+						cm = 2
+						cx += 1
+						cd = 3
+						anime_frame = 12
+						if cx >= 20 : cx = 19
+						block_cnt += 1
+						if success = 0 : success = 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Right"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					}
+				swbreak
+
+				case 8 // ↓
+					if easy_mode = 0 { if cd != 1 { // 通常の場合、180°の移動は禁止
+						cm = 2
+						cy += 1
+						cd = 0
+						anime_frame = 12
+						if cy >= 15 : cy = 14
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Down"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					} }
+					if easy_mode = 1 { //イージーモードの場合、180°の移動は可能
+						cm = 2
+						cy += 1
+						cd = 0
+						anime_frame = 12
+						if cy >= 15 : cy = 14
+						block_cnt += 1
+						if debug = 1 {
+							color 0,255,0
+							pos 0*ChipSize,1*ChipSize
+							mes "Key : Down"
+						}
+
+						if map(cx,cy) = 27 : map(cx,cy) = 02 // ブロックの数字を増やす
+						if map(cx,cy) = 26 : map(cx,cy) = 27
+						if map(cx,cy) = 25 : map(cx,cy) = 26
+						if map(cx,cy) = 24 : map(cx,cy) = 25
+						if map(cx,cy) = 23 : map(cx,cy) = 24
+						if map(cx,cy) = 22 : map(cx,cy) = 23
+						if map(cx,cy) = 21 : map(cx,cy) = 22
+						if map(cx,cy) = 00 : map(cx,cy) = 21
+//						if map(cx,cy) = 00 : map(cx,cy) = 01
+
+					}
+				swbreak
+
+			swend
+
+		} } }
+
+	}
+
+	if easy_mode = 1 { // イージーモードの場合、キャラクターの自由回転を許可
+		switch key
+			case 1 : cd = 2 : swbreak
+			case 2 : cd = 1 : swbreak
+			case 4 : cd = 3 : swbreak
+			case 8 : cd = 0 : swbreak
+		swend
+	}
+
+return
+
+*commandGameResult
+
+	stick key , 15 // ゲームキーを使用
+
+	switch key
+
+		case 1024 // TAB : リトライ
+			if debug = 1 {
+				color 0,255,0
+				pos 0*ChipSize,1*ChipSize
+				mes "Key : TAB"
+			}
+			if success = 3 : goto *setGame
+		swbreak
+
+		case 32 // ENTER : リトライ
+			if debug = 1 {
+				color 0,255,0
+				pos 0*ChipSize,1*ChipSize
+				mes "Key : ENTER"
+			}
+			if success = 3 : goto *setGame
+		swbreak
+
+		case 128 // ESC : ゲームを終了する
+			goto *exitGame
+		swbreak
+
+		case 64 // CTRL : ゲームを終了する
+			goto *exitGame
+		swbreak
+
+	swend
+
+return
+
+// マップの壁を確認
+//----------------------------------------------------------------
+
+*checkGameMove
+
+	cm = 0
+
+	switch key
+		case 1  : check_cx = cx - 1 : check_cy = cy     : swbreak
+		case 2  : check_cx = cx     : check_cy = cy - 1 : swbreak
+		case 4  : check_cx = cx + 1 : check_cy = cy     : swbreak
+		case 8  : check_cx = cx     : check_cy = cy + 1 : swbreak
+		default : check_cx = cx     : check_cy = cy     : swbreak
+	swend
+
+//	if map(check_cx,check_cy) = 00 : cm = 1 // 移動したい場所に穴がある場合、 [cm] に 1 を代入
+	if map(check_cx,check_cy) = 11 : cm = 1 // 移動したい場所に壁がある場合、 [cm] に 1 を代入
+	if map(check_cx,check_cy) = 12 : cm = 1
+	if map(check_cx,check_cy) = 13 : cm = 1
+	if map(check_cx,check_cy) = 14 : cm = 1
+	if map(check_cx,check_cy) = 15 : cm = 1
+	if map(check_cx,check_cy) = 16 : cm = 1
+	if map(check_cx,check_cy) = 17 : cm = 1
+	if map(check_cx,check_cy) = 18 : cm = 1
+	if map(check_cx,check_cy) = 19 : cm = 1
+
+	if map(check_cx,check_cy) = 00 & map(cx,cy) = 04 : cm = 1
+
+	if success = 1 : if map(check_cx,check_cy) = 03 : cm = 1 // ゲーム開始後、スタート地点には戻れない
+
+	if check_key = 1 : cm = 0
+
+return
+
+//================================================================
+// 次のステージを準備する
+//================================================================
+
+*setNextStage
+
+	repeat 16
+		gosub *FadeOut // フェードアウト
+		fps_wait
+	loop
+
+	frame_cnt = 0
+
+	skip_show_stage_num = 0
+
+goto *setStageSize
+
+//================================================================
+// ゲームを終了する前に
+//================================================================
+
+*exitGame
+
+	redraw 1
+
+	gmode 3 , , , 127
+	pos 0,0
+	gcopy 5 , 0,0 , ChipSize*MapSizeX,ChipSize*MapSizeY
+
+	mbx = 3 // テキストボックスのX座標
+	mby = 1 // テキストボックスのY座標
+
+	mbw = 13 // テキストボックスの長さ
+	mbh = 11 // テキストボックスの高さ
+
+	gosub *drawTextBox
+
+	color 255,255,255
+	pos (mbx+2)*ChipSize,(mby+mbh-2)*ChipSize
+	mes "Stage : " + stage_name_num + "x" + stage_name_num
+
+	color 255,255,255
+	pos (mbx+2)*ChipSize,(mby+2)*ChipSize
+	mes "Quit?"
+
+	color 255,255,255
+	pos (mbx+2)*ChipSize,(mby+4)*ChipSize
+	mes "[ESC] : No!"
+
+	color 255,255,255
+	pos (mbx+2)*ChipSize,(mby+5)*ChipSize
+	mes "[TAB] : Yes!"
+
+	redraw 0
+
+	repeat
+
+		stick key , 15 // ゲームキーを使用
+
+		switch key
+
+			case 1024 // TAB : 本当にゲームを終了する
+				skip_show_stage_num = 0
+				goto *setStageSize
+			swbreak
+
+			case 32 // ENTER : 本当にゲームを終了する
+				skip_show_stage_num = 0
+				goto *setStageSize
+			swbreak
+
+			case 128 // ESC : やっぱりゲームを再開する
+				if success = 0 : goto *startGameIntroPerformance
+				if success = 1 : goto *Game
+				if success = 2 : goto *GameResult
+				if success = 3 : goto *GameResult
+			swbreak
+
+			case 64 // CTRL : やっぱりゲームを再開する
+				if success = 0 : goto *startGameIntroPerformance
+				if success = 1 : goto *Game
+				if success = 2 : goto *GameResult
+				if success = 3 : goto *GameResult
+			swbreak
+
+		swend
+
+		fps_wait
+
+	loop
+
+//================================================================
+// ステージを保存する
+//================================================================
+
+*saveStage
+
+	n = 0
+
+	notesel cache
+
+	repeat 15
+		noteadd ""+ strf("%02d",map(00,n)) +","+ strf("%02d",map(01,n)) +","+ strf("%02d",map(02,n)) +","+ strf("%02d",map(03,n)) +","+ strf("%02d",map(04,n)) +","+ strf("%02d",map(05,n)) +","+ strf("%02d",map(06,n)) +","+ strf("%02d",map(07,n)) +","+ strf("%02d",map(08,n)) +","+ strf("%02d",map(09,n)) +","+ strf("%02d",map(10,n)) +","+ strf("%02d",map(11,n)) +","+ strf("%02d",map(12,n)) +","+ strf("%02d",map(13,n)) +","+ strf("%02d",map(14,n)) +","+ strf("%02d",map(15,n)) +","+ strf("%02d",map(16,n)) +","+ strf("%02d",map(17,n)) +","+ strf("%02d",map(18,n)) +","+ strf("%02d",map(19,n)) , n , 1
+		n += 1
+	loop
+
+	switch stage_name
+		case "Stage-Tmp04.txt" : noteadd "07,08" , 15 , 1 : swbreak
+		case "Stage-Tmp06.txt" : noteadd "06,09" , 15 , 1 : swbreak
+		case "Stage-Tmp08.txt" : noteadd "05,10" , 15 , 1 : swbreak
+		case "Stage-Tmp10.txt" : noteadd "04,11" , 15 , 1 : swbreak
+	swend
+
+	noteadd ""+ block_cnt +"" , 16 , 1
+
+	notesave "Stage" + strf("%03d",save_stage_cnt) + ".txt"
+
+	save_stage_cnt += 1
+
+return

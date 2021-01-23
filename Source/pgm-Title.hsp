@@ -1,0 +1,1265 @@
+
+	development_mode = 0 // 開発モード (0:オフ／製品用 , 1:オン／開発用)
+
+	if development_mode = 1 {
+		delete "hsptmp"
+		delete "obj"
+	}
+
+//================================================================
+// 定義
+//================================================================
+
+// データ
+//----------------------------------------------------------------
+
+	#packopt name "Invisible Maze"
+	#packopt icon "bin-Icon.ico"
+
+	#pack "pgm-Title.hsp"
+	#pack "pgm-Game.hsp"
+	#pack "pgm-Graphic.hsp"
+
+	#pack "tex-Block.bmp"
+	#pack "tex-Char.bmp"
+	#pack "tex-Title.bmp"
+	#pack "tex-UI.bmp"
+
+	#pack "snd-Move.wav"
+	#pack "snd-Select.wav"
+	#pack "snd-Step.wav"
+
+	#pack "Stage000.txt"
+
+	#pack "Stage001.txt"
+	#pack "Stage002.txt"
+	#pack "Stage003.txt"
+	#pack "Stage004.txt"
+	#pack "Stage005.txt"
+	#pack "Stage006.txt"
+	#pack "Stage007.txt"
+	#pack "Stage008.txt"
+	#pack "Stage009.txt"
+	#pack "Stage010.txt"
+
+	#pack "Stage011.txt"
+	#pack "Stage012.txt"
+	#pack "Stage013.txt"
+	#pack "Stage014.txt"
+	#pack "Stage015.txt"
+	#pack "Stage016.txt"
+	#pack "Stage017.txt"
+	#pack "Stage018.txt"
+	#pack "Stage019.txt"
+	#pack "Stage020.txt"
+
+	#pack "Stage021.txt"
+	#pack "Stage022.txt"
+	#pack "Stage023.txt"
+	#pack "Stage024.txt"
+	#pack "Stage025.txt"
+	#pack "Stage026.txt"
+	#pack "Stage027.txt"
+	#pack "Stage028.txt"
+	#pack "Stage029.txt"
+	#pack "Stage030.txt"
+
+	#pack "Stage031.txt"
+	#pack "Stage032.txt"
+	#pack "Stage033.txt"
+	#pack "Stage034.txt"
+	#pack "Stage035.txt"
+	#pack "Stage036.txt"
+	#pack "Stage037.txt"
+	#pack "Stage038.txt"
+	#pack "Stage039.txt"
+	#pack "Stage040.txt"
+
+	#pack "Stage041.txt"
+	#pack "Stage042.txt"
+	#pack "Stage043.txt"
+	#pack "Stage044.txt"
+	#pack "Stage045.txt"
+	#pack "Stage046.txt"
+	#pack "Stage047.txt"
+	#pack "Stage048.txt"
+	#pack "Stage049.txt"
+	#pack "Stage050.txt"
+
+	#pack "Stage051.txt"
+	#pack "Stage052.txt"
+	#pack "Stage053.txt"
+	#pack "Stage054.txt"
+	#pack "Stage055.txt"
+	#pack "Stage056.txt"
+	#pack "Stage057.txt"
+	#pack "Stage058.txt"
+	#pack "Stage059.txt"
+	#pack "Stage060.txt"
+
+	#pack "Stage061.txt"
+	#pack "Stage062.txt"
+	#pack "Stage063.txt"
+	#pack "Stage064.txt"
+	#pack "Stage065.txt"
+	#pack "Stage066.txt"
+	#pack "Stage067.txt"
+	#pack "Stage068.txt"
+	#pack "Stage069.txt"
+	#pack "Stage070.txt"
+
+	#pack "Stage071.txt"
+	#pack "Stage072.txt"
+	#pack "Stage073.txt"
+	#pack "Stage074.txt"
+	#pack "Stage075.txt"
+	#pack "Stage076.txt"
+	#pack "Stage077.txt"
+	#pack "Stage078.txt"
+	#pack "Stage079.txt"
+	#pack "Stage080.txt"
+
+	#pack "Stage081.txt"
+	#pack "Stage082.txt"
+	#pack "Stage083.txt"
+	#pack "Stage084.txt"
+	#pack "Stage085.txt"
+	#pack "Stage086.txt"
+	#pack "Stage087.txt"
+	#pack "Stage088.txt"
+	#pack "Stage089.txt"
+	#pack "Stage090.txt"
+
+	#pack "Stage091.txt"
+	#pack "Stage092.txt"
+	#pack "Stage093.txt"
+	#pack "Stage094.txt"
+	#pack "Stage095.txt"
+	#pack "Stage096.txt"
+	#pack "Stage097.txt"
+	#pack "Stage098.txt"
+	#pack "Stage099.txt"
+	#pack "Stage100.txt"
+
+// その他
+//----------------------------------------------------------------
+
+	title_name = "Invisible Maze" // タイトル
+	version = "1.0.0" // バージョン
+	font_name = "Courier" // フォント
+
+	#define ChipSize 16*zoom // チップのサイズ
+	#define MapSizeX 20 // マップのXサイズ
+	#define MapSizeY 15 // マップのYサイズ
+
+	#include "mod-waitFPS.hsp"
+
+	fps = 15 // フレーム数
+
+	fps_config fps
+
+	zoom = 1 // 画面拡大率
+
+	skip_opening = 0 // オープニングをスキップ (0:しない , 1:する)
+
+	#include "hsp3util.as" // アニメーション用のASファイル
+
+//================================================================
+// 初期設定
+//================================================================
+
+	easy_mode = 0 // 難易度 (0:ノーマル , 1:イージー)
+
+	bgm_mute = 0 // BGMを消音 (0:無効 , 1:有効)
+	se_mute = 0 // SEを消音 (0:無効 , 1:有効)
+
+	skip_load_default_stage = 0 // 初期ステージを (0:読み込む , 1:読み込まない)
+
+	num_digit = 3 // ステージ番号の入力桁
+
+	stage_name = "Stage001.txt" // 初期ステージファイル
+	stage_name_num = 001 // 初期ステージ番号
+	type_stage_name_num = 001 // 初期ステージ番号
+	stage = 100 // 完成したステージ数
+
+	bgm_vol = -800 // BGMの音量
+	bgm_vol_fade = bgm_vol
+
+	se_vol = -500 // SEの音量
+
+//================================================================
+// 画面データ
+//================================================================
+
+*Reload
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+	randomize
+
+ 	// 画面サイズ : 320(16*20)*240(16*15)
+
+	winX = ChipSize*MapSizeX
+	winY = ChipSize*MapSizeY
+
+	// 画面ポジション : ディスプレイの中央
+
+	posX = (ginfo_dispx-winX)/2
+	posY = (ginfo_dispy-winY)/2
+
+	screen 0 , winX,winY , 0 , posX,posY
+	title title_name
+
+	font font_name , 16*zoom
+
+//================================================================
+// 定義
+//================================================================
+
+// 画像関係
+//----------------------------------------------------------------
+
+	buffer 11 // ブロックのテクスチャー
+		picload "tex-Block.bmp"
+		gsel 0
+
+	buffer 12 // キャラクターのテクスチャー
+		picload "tex-Char.bmp"
+		gsel 0
+
+	buffer 13 // タイトルのテクスチャー
+		picload "tex-Title.bmp"
+		gsel 0
+
+	buffer 14 // UIのテクスチャー
+		picload "tex-UI.bmp"
+		gsel 0
+
+	buffer 1 // ブロックのテクスチャー (描画用)
+		gzoom 128*zoom,128*zoom , 11 , 0,0 , 128,128
+		gsel 0
+
+	buffer 2 // キャラクターのテクスチャー (描画用)
+		gzoom 128*zoom,128*zoom , 12 , 0,0 , 128,128
+		gsel 0
+
+	buffer 3 // タイトルのテクスチャー (描画用)
+		gzoom 256*zoom,256*zoom , 13 , 0,0 , 256,256
+		gsel 0
+
+	buffer 4 // UIのテクスチャー (描画用)
+		gzoom 256*zoom,256*zoom , 14 , 0,0 , 256,256
+		gsel 0
+
+	buffer 5 , ChipSize*MapSizeX,ChipSize*MapSizeY // フェード用
+		color 0,0,0
+		boxf 0,0 , ChipSize*MapSizeX,ChipSize*MapSizeY
+		gsel 0
+
+// 音楽関係
+//----------------------------------------------------------------
+
+	mmload "snd-Move.wav" , 1 , 0 // セレクトカーソルの移動音
+	mmvol 1 , se_vol
+
+	mmload "snd-Select.wav" , 2 , 0 // セレクトカーソルの決定音
+	mmvol 2 , se_vol
+
+	mmload "snd-Step.wav" , 3 , 0 // 足音
+	mmvol 3 , 0
+
+	mmload "snd-TitleBGM.mp3" , 4 , 1 // タイトルBGM
+	mmvol 4 , bgm_vol
+
+	mmload "snd-GameBGM.mp3" , 5 , 1 // ゲームBGM
+	mmvol 5 , bgm_vol
+
+//================================================================
+// 設定
+//================================================================
+
+	debug = 0 // デバッグモード (0:無効 , 1:有効)
+	game_debug = 0 // クイック・ステージデバッグモード (0:無効 , 1:有効)
+
+	if game_debug = 1 {
+		stage_name = "Stage001.txt" // 初期ステージファイル
+		stage_name_num = 001 // 初期ステージ番号
+		type_stage_name_num = 001 // 初期ステージ番号
+	}
+
+//================================================================
+// 初期設定
+//================================================================
+
+*setTitle
+
+	key = 0
+	check_key = 0
+	skip_key = 0
+
+	change_zoom = 0 // ズームが切り替えられたか
+
+	anime_frame = 0 // アニメーションフレーム (0~16)
+
+	frame_cnt = 0 // フェード用のアニメーションフレーム (0~255)
+
+	jump_anime = 0
+
+	cx = 4 // セレクトカーソルのX座標 (0~20)
+	cy = 7 // セレクトカーソルのY座標 (0~15)
+	cm = 0 // セレクトカーソルの動作 (0:移動可能 , 1:移動不可能 , 2:移動中)
+
+	sbx = 0 // スクロールバーのX座標 (0~20)
+	sby = 0 // スクロールバーのY座標 (0~15)
+	sbh = 0 // スクロールバーの縦幅
+	sbw = 0 // スクロールバーの横幅
+
+	mbx = 0 // テキストボックスのX座標 (0~20)
+	mby = 0 // テキストボックスのY座標 (0~15)
+	mbh = 0 // テキストボックスの縦幅
+	mbw = 0 // テキストボックスの横幅
+
+	tx = 5 // テキストのX座標 (0~20)
+	ty = 8 // テキストのY座標 (0~15)
+
+//================================================================
+// 画面初期化
+//================================================================
+
+	#include "pgm-Graphic.hsp"
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+//================================================================
+// オープニング
+//================================================================
+
+	if game_debug = 1 : goto *gotoGame // クイック・ステージデバッグモードの場合はタイトルをスキップ
+
+	if skip_opening = 1 : goto *startTop // タイトル復帰時はオープニングをスキップ
+
+	repeat 8 : fps_wait : loop
+
+// クレジットを表示 (登)
+//----------------------------------------------------------------
+
+	repeat 16
+
+		redraw 0
+
+		gosub *Credit // クレジット
+		gosub *FadeIn // フェードイン
+
+		redraw 1
+
+		gosub *commandSkip // スキップ
+		if skip_key = 1 {
+			skip_key = 0
+			frame_cnt = 0
+			goto *startTop
+		}
+
+		fps_wait
+
+	loop
+
+	frame_cnt = 0
+
+// クレジットを表示 (頂)
+//----------------------------------------------------------------
+
+	repeat 32
+
+		gosub *commandSkip // スキップ
+		if skip_key = 1 {
+			skip_key = 0
+			frame_cnt = 0
+			goto *startTop
+		}
+
+		fps_wait
+
+	loop
+
+// クレジットを表示 (降)
+//----------------------------------------------------------------
+
+	repeat 16
+
+		gosub *FadeOut // フェードアウト
+
+		gosub *commandSkip // スキップ
+		if skip_key = 1 {
+			skip_key = 0
+			frame_cnt = 0
+			goto *startTop
+		}
+
+		fps_wait
+
+	loop
+
+	frame_cnt = 0
+
+	repeat 8 : fps_wait : loop
+
+//================================================================
+// タイトル画面：開始演出
+//================================================================
+
+*startTop
+
+	skip_opening = 1
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	fps_wait
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 6 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawTopText // テキストを描画
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// サイクル・フェードイン
+//----------------------------------------------------------------
+
+	if frame_cnt != 256 : gosub *FadeIn // フェードイン
+	if frame_cnt = 256 {
+		frame_cnt = 0
+		if bgm_mute = 0 : mmplay 4
+		goto *Top // 演出が完了したらタイトル画面へ
+	}
+
+	redraw 1
+
+goto *startTop
+
+//================================================================
+// タイトル画面
+//================================================================
+
+*Top
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 6 - 1 // スクロールバーの高さ
+
+	getkey change_zoom , 90 // 画面拡大率を変更
+	if ginfo(2) != -1 { if change_zoom = 1 {
+		switch zoom
+			case 1 : zoom = 2 : mmstop : swbreak
+			case 2 : zoom = 1 : mmstop : swbreak
+		swend
+		goto *Reload
+	} }
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawTopText // テキストを描画
+	gosub *commandTitle // 操作＆確認
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// 操作
+//----------------------------------------------------------------
+
+	if cm = 0 & anime_frame = 0 & check_key = 0 {
+
+		if key = 128 | key = 64 { // ESCもしくはCTRLで終了確認画面へ
+			cy = 7
+			if se_mute = 0 : mmplay 2
+			goto *setExit
+		}
+
+		if key = 32 | key = 1024 { // ENTERもしくはTABで決定
+			switch cy
+				case sby+0
+					cy = sby
+					if se_mute = 0 : mmplay 2
+					goto *runGame1
+				swbreak
+				case sby+1
+					cy = sby
+					if skip_load_default_stage = 0 : type_stage_name_num = 001
+					if se_mute = 0 : mmplay 2
+					goto *setStageSelect
+				swbreak
+				case sby+2
+					cy = sby
+					if se_mute = 0 : mmplay 2
+					goto *setOption
+				swbreak
+				case sby+3
+					cy = sby
+					if se_mute = 0 : mmplay 2
+					goto *setExit
+				swbreak
+			swend
+		}
+
+	}
+
+	redraw 1
+
+	fps_wait
+
+goto *Top
+
+// メニュー
+//----------------------------------------------------------------
+
+*drawTopText
+
+	color 255,255,255
+	pos tx*ChipSize,ty*ChipSize
+	mes "Game Start"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+1)*ChipSize
+	mes "Stage Select"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+2)*ChipSize
+	mes "Option"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+3)*ChipSize
+	mes "Close"
+
+	color 255,255,255
+	pos 0*ChipSize,14*ChipSize
+	mes "Ver " + version // バージョン
+
+return
+
+//================================================================
+// ゲームを開始
+//================================================================
+
+*runGame1
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 6 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawTopText // テキストを描画
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// サイクル・フェードアウト
+//----------------------------------------------------------------
+
+	if frame_cnt != 256 { // フェードアウト
+		gosub *FadeOut
+		gosub *MusicFadeOut
+	}
+
+	if frame_cnt = 256 { // 演出が完了したらゲーム開始
+		frame_cnt = 0
+		bgm_vol_fade = bgm_vol
+		goto *gotoGame
+	}
+
+	fps_wait
+
+	redraw 1
+
+goto *runGame1
+
+//================================================================
+// ステージを選択
+//================================================================
+
+*setStageSelect
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 4 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawStageSelectText // テキストを描画
+	gosub *commandTitle // 操作＆確認
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// 操作
+//----------------------------------------------------------------
+
+	if cm = 0 & anime_frame = 0 & check_key = 0 {
+
+		if key = 128 | key = 64 { // ESCもしくはCTRLでタイトルへ戻る
+			cy = sby+1
+			num_digit = 3
+			if se_mute = 0 : mmplay 2
+			goto *Top
+		}
+
+		if key = 32 | key = 1024 { // ENTERもしくはTABで決定
+			switch cy
+				case sby+1
+					if type_stage_name_num <= stage : skip_load_default_stage = 1
+					if type_stage_name_num <= stage : cy = sby+1
+					if se_mute = 0 : mmplay 2
+					if type_stage_name_num <= stage : goto *runGame2
+				swbreak
+			swend
+		}
+
+	}
+
+	if ginfo(2) != -1 : gosub *typeStageNumber // ステージ番号を入力
+
+	fps_wait
+
+	redraw 1
+
+goto *setStageSelect
+
+// メニュー
+//----------------------------------------------------------------
+
+*drawStageSelectText
+
+	color 255,255,255
+	pos tx*ChipSize,ty*ChipSize
+	mes "> Type Stage Num"
+
+	color 255,255,255
+	pos 0*ChipSize,14*ChipSize
+	mes "Ver " + version // バージョン
+
+// ステージ (番号+矢印)
+//----------------------------------------------------------------
+
+	if type_stage_name_num = 000 {
+		color 255,255,255
+		pos tx*ChipSize,(ty+1)*ChipSize
+		mes "Stage :   000" + " >"
+	}
+
+	if stage != 999 {
+
+		if type_stage_name_num > 000 & type_stage_name_num <= stage {
+			color 255,255,255
+			pos tx*ChipSize,(ty+1)*ChipSize
+			mes "Stage : < " + strf("%03d",type_stage_name_num) + " >"
+		}
+
+		if type_stage_name_num > stage & type_stage_name_num < 999 {
+			color 127,127,127
+			pos tx*ChipSize,(ty+1)*ChipSize
+			mes "Stage : < " + strf("%03d",type_stage_name_num) + " >"
+		}
+
+	} else {
+
+		if type_stage_name_num > 000 & type_stage_name_num < 999 {
+			color 255,255,255
+			pos tx*ChipSize,(ty+1)*ChipSize
+			mes "Stage : < " + strf("%03d",type_stage_name_num) + " >"
+		}
+
+	}
+
+	if type_stage_name_num = 999 {
+		if stage = 999 { color 255,255,255 } else { color 127,127,127 }
+		pos tx*ChipSize,(ty+1)*ChipSize
+		mes "Stage : < 999" + "  "
+	}
+
+// ステージ (入力桁)
+//----------------------------------------------------------------
+
+	if num_digit = 3 {
+		color 255,255,255
+		pos tx*ChipSize,(ty+1)*ChipSize
+		mes "          _"
+	}
+
+	if num_digit = 2 {
+		color 255,255,255
+		pos tx*ChipSize,(ty+1)*ChipSize
+		mes "           _"
+	}
+
+	if num_digit = 1 {
+		color 255,255,255
+		pos tx*ChipSize,(ty+1)*ChipSize
+		mes "            _"
+	}
+
+return
+
+//================================================================
+// ゲームを開始 (2)
+//================================================================
+
+*runGame2
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 4 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawStageSelectText // テキストを描画
+	gosub *commandTitle // 操作＆確認
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// サイクル・フェードアウト
+//----------------------------------------------------------------
+
+	if frame_cnt != 256 { // フェードアウト
+		gosub *FadeOut
+		gosub *MusicFadeOut
+	}
+
+	if frame_cnt = 256 { // 演出が完了したらゲーム開始
+		frame_cnt = 0
+		bgm_vol_fade = bgm_vol
+		goto *gotoGame
+	}
+
+	fps_wait
+
+	redraw 1
+
+goto *runGame2
+
+//================================================================
+// オプション
+//================================================================
+
+*setOption
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 6 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawOptionText // テキストを描画
+	gosub *commandTitle // 操作＆確認
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// 操作
+//----------------------------------------------------------------
+
+	if cm = 0 & anime_frame = 0 & check_key = 0 {
+
+		if key = 128 | key = 64 { // ESCもしくはCTRLでタイトルへ戻る
+			cy = sby+2
+			if se_mute = 0 : mmplay 2
+			goto *Top
+		}
+
+		if key = 32 | key = 1024 { // ENTERもしくはTABで決定
+			switch cy
+				case sby+1
+					if se_mute = 0 : mmplay 2
+					if easy_mode = 0 : easy_mode = 1 : swbreak
+					if easy_mode = 1 : easy_mode = 0 : swbreak
+				case sby+2
+					if se_mute = 0 : mmplay 2
+					if bgm_mute = 0 : bgm_mute = 1 : mmvol 4 , -1000 : swbreak
+					if bgm_mute = 1 : bgm_mute = 0 : mmvol 4 , bgm_vol : swbreak
+				case sby+3
+					if se_mute = 0 : mmplay 2
+					if se_mute = 0 : se_mute = 1 : swbreak
+					if se_mute = 1 : se_mute = 0 : swbreak
+			swend
+		}
+
+	}
+
+	fps_wait
+
+	redraw 1
+
+goto *setOption
+
+// メニュー
+//----------------------------------------------------------------
+
+*drawOptionText
+
+	color 255,255,255
+	pos tx*ChipSize,ty*ChipSize
+	mes "> Option"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+1)*ChipSize
+	if easy_mode = 0 : mes "Mode : [Normal]"
+	if easy_mode = 1 : mes "Mode : [Easy]"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+2)*ChipSize
+	if bgm_mute = 0 : mes "BGM : [ON]"
+	if bgm_mute = 1 : mes "BGM : [OFF]"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+3)*ChipSize
+	if se_mute = 0 : mes "SE : [ON]"
+	if se_mute = 1 : mes "SE : [OFF]"
+
+	color 255,255,255
+	pos 0*ChipSize,14*ChipSize
+	mes "Ver " + version // バージョン
+
+return
+
+//================================================================
+// プログラムを終了
+//================================================================
+
+*setExit
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+// 設定
+//----------------------------------------------------------------
+
+	sbx = 4 // スクロールバーのX座標
+	sby = 7 // スクロールバーのY座標
+
+	sbw = 12 - 1 // スクロールバーの長さ
+	sbh = 5 - 1 // スクロールバーの高さ
+
+// 描画
+//----------------------------------------------------------------
+
+	gosub *drawTitle // タイトルを描画
+	gosub *drawGameEndText // テキストを描画
+	gosub *commandTitle // 操作＆確認
+	gosub *drawSelectCursorScrollBar // セレクトカーソルのスクロールバーを描画
+	gosub *drawSelectCursor // セレクトカーソルを描画
+
+	if debug = 1 : gosub *debugTitleDisplay // デバッグ用
+
+// 操作
+//----------------------------------------------------------------
+
+	if cm = 0 & anime_frame = 0 & check_key = 0 {
+
+		if key = 128 | key = 64 { // ESCもしくはCTRLでタイトルへ戻る
+			cy = sby+3
+			if se_mute = 0 : mmplay 2
+			goto *Top
+		}
+
+		if key = 32 | key = 1024 { // ENTERもしくはTABで決定
+			switch cy
+				case sby+1
+					if se_mute = 0 : mmplay 2
+					end
+				swbreak
+				case sby+2
+					cy = sby+3
+					if se_mute = 0 : mmplay 2
+					goto *Top
+				swbreak
+			swend
+		}
+
+	}
+
+	fps_wait
+
+	redraw 1
+
+goto *setExit
+
+// メニュー
+//----------------------------------------------------------------
+
+*drawGameEndText
+
+	color 255,255,255
+	pos tx*ChipSize,ty*ChipSize
+	mes "> Quit?"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+1)*ChipSize
+	mes "Yes!"
+
+	color 255,255,255
+	pos tx*ChipSize,(ty+2)*ChipSize
+	mes "No!"
+
+	color 255,255,255
+	pos 0*ChipSize,14*ChipSize
+	mes "Ver " + version // バージョン
+
+return
+
+//================================================================
+// ゲームを準備
+//================================================================
+
+*gotoGame
+
+	if type_stage_name_num >= 000 & type_stage_name_num <= stage {
+		stage_name = "Stage" + strf("%03d",type_stage_name_num) + ".txt"
+	}
+
+// ようこそ
+//----------------------------------------------------------------
+
+	redraw 0
+
+	color 0,0,0 // 背景を塗り潰す
+	boxf
+
+	redraw 1
+
+	repeat 16 : fps_wait : loop
+
+	#include "pgm-Game.hsp"
+
+goto *startTop
+
+//================================================================
+// デバッグ用
+//================================================================
+
+*debugTitleDisplay
+
+	color 0,255,0
+	pos 0*ChipSize,0*ChipSize
+	mes "Debug Mode"
+
+	mes "FPS : " + fps_get()
+	mes "BGM Vol : " + bgm_vol
+	mes "BGM Vol Fade : " + bgm_vol_fade
+
+return
+
+//================================================================
+// 操作＆確認
+//================================================================
+
+*commandTitle
+
+	check_key = 0
+
+	if key != 0 : check_key = 1
+
+	stick key , 15 // ゲームキーを使用
+
+	if cm != 2 { // 移動中は操作不可能
+
+		if key >= 1 : gosub *checkTitleMove
+
+		if cm = 0 { if anime_frame = 0 { if check_key = 0 {
+
+			switch key
+
+				case 2 // ↑
+					cm = 2
+					cy -= 1
+					cd = 0
+					anime_frame = 16
+					if cy < sby : cy = sby
+				swbreak
+
+				case 8 // ↓
+					cm = 2
+					cy += 1
+					cd = 1
+					anime_frame = 16
+					if cy >= sbx+sbh+1 : cy = sbx+sbh+1
+				swbreak
+
+			swend
+
+		} } }
+
+	}
+
+return
+
+// 確認
+//----------------------------------------------------------------
+
+*checkTitleMove
+
+	cm = 0
+
+	switch key
+		case 2  : check_cy = cy - 1 : swbreak
+		case 8  : check_cy = cy + 1 : swbreak
+		default : check_cy = cy     : swbreak
+	swend
+
+	if check_cy = sbh+sby-1 : if check_key = 0 : cm = 1 // 移動できない場合、 [cm] に 1 を代入
+	if check_cy = sby-1     : if check_key = 0 : cm = 1 // 移動できない場合、 [cm] に 1 を代入
+
+	if check_key = 1 : cm = 0
+
+return
+
+// ステージ番号を入力
+//----------------------------------------------------------------
+
+*typeStageNumber
+
+	// 矢印キーで入力
+
+	stick key , 15 // ゲームキーを使用
+
+	if cy = sby+1 { if cm != 2 { if anime_frame = 0 { if check_key = 0 {
+
+		switch key
+
+			case 1 // ←
+				num_digit = 0
+				if se_mute = 0 : mmplay 2
+				if type_stage_name_num != 000 : type_stage_name_num -= 1
+			swbreak
+
+			case 4 // →
+				num_digit = 0
+				if se_mute = 0 : mmplay 2
+				if type_stage_name_num != 999 : type_stage_name_num += 1
+			swbreak
+
+		swend
+
+	} } } }
+
+	if key != 0 : check_key = 1
+
+	check_key = 0
+
+	// 数字キーで入力
+
+	if num_check_key != -11 : check_key = 1
+
+	num_check_key = 0
+
+	num = -1
+
+	getkey key0  , 48 : if key0 = 1 { num = 0 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key1  , 49 : if key1 = 1 { num = 1 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key2  , 50 : if key2 = 1 { num = 2 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key3  , 51 : if key3 = 1 { num = 3 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key4  , 52 : if key4 = 1 { num = 4 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key5  , 53 : if key5 = 1 { num = 5 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key6  , 54 : if key6 = 1 { num = 6 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key7  , 55 : if key7 = 1 { num = 7 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key8  , 56 : if key8 = 1 { num = 8 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey key9  , 57 : if key9 = 1 { num = 9 : num_check_key += 1 } else { num_check_key -= 1 }
+	getkey keybs , 8 : if keybs = 1 { num_check_key += 1 } else { num_check_key -= 1 }
+
+	if cy = sby+1 & cm != 2 & anime_frame = 0 & check_key = 0 & num_check_key = -9 {
+
+		if num_digit = 1 { // 1桁目
+			type_stage_name_num += num
+			num_digit = 0
+			if se_mute = 0 : mmplay 2
+			num = -1
+		}
+
+		if num_digit = 2 { // 2桁目
+			type_stage_name_num += num*10
+			num_digit = 1
+			if se_mute = 0 : mmplay 2
+			num = -1
+		}
+
+		if num_digit = 3 { // 3桁目
+			type_stage_name_num += num*100
+			num_digit = 2
+			if se_mute = 0 : mmplay 2
+			num = -1
+		}
+
+		if keybs = 1 {
+			type_stage_name_num = 000
+			num_digit = 3
+			if se_mute = 0 : mmplay 2
+		}
+
+	}
+
+	if type_stage_name_num > 999 : type_stage_name_num -= 1000
+
+return
+
+//================================================================
+// スキップ
+//================================================================
+
+*commandSkip
+
+	stick key , 15 // ゲームキーを使用
+
+	switch key
+
+		case 1024 // TAB
+			skip_key = 1
+			key = 0
+		swbreak
+
+		case 32 // ENTER
+			skip_key = 1
+			key = 0
+		swbreak
+
+		case 128 // ESC
+			skip_key = 1
+			key = 0
+		swbreak
+
+		case 64 // CTRL
+			skip_key = 1
+			key = 0
+		swbreak
+
+		default
+			key = 0
+		swbreak
+
+	swend
+
+return
+
+//================================================================
+// クレジット
+//================================================================
+
+*Credit
+
+	glitch = 1*zoom
+	bold = 2
+
+	text1 = "Created by"
+	textx1 = winX/2 - ((strlen(text1)+bold)*4)*zoom
+		color 127,127,127
+		pos textx1-glitch,6*ChipSize
+		mes text1
+		color 127,127,127
+		pos textx1+glitch,6*ChipSize
+		mes text1
+		color 255,255,255
+		pos textx1,6*ChipSize
+		mes text1
+
+	text2 = "Something Onu"
+	textx2 = winX/2 - ((strlen(text2)+bold)*4)*zoom
+		color 127,127,127
+		pos textx2-glitch,8*ChipSize
+		mes text2
+		color 127,127,127
+		pos textx2+glitch,8*ChipSize
+		mes text2
+		color 255,255,255
+		pos textx2,8*ChipSize
+		mes text2
+
+return

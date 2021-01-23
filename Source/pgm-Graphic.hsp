@@ -1,0 +1,1024 @@
+
+	goto *EoF_Graphic
+
+//================================================================
+// 画面フェードイン
+//================================================================
+
+*FadeIn
+
+	if frame_cnt <= 256 {
+		redraw 0
+		gmode 3 , , , (256-frame_cnt)
+		pos 0,0
+		gcopy 5 , 0,0 , WinX,WinY
+		redraw 1
+		frame_cnt += 16
+	}
+
+return
+
+//================================================================
+// 画面フェードアウト
+//================================================================
+
+*FadeOut
+
+	if frame_cnt <= 256 {
+		redraw 0
+		gmode 3 , , , (frame_cnt)
+		pos 0,0
+		gcopy 5 , 0,0 , WinX,WinY
+		redraw 1
+		frame_cnt += 16
+	}
+
+return
+
+//================================================================
+// 音楽(BGM)フェードアウト
+//================================================================
+
+*MusicFadeOut
+
+	if bgm_mute = 0 {
+		bgm_vol_fade -= 20
+		if bgm_vol_fade > -1000 { // 音楽が消えるまでフェードアウトする
+			mmvol 4 , bgm_vol_fade
+			mmvol 5 , bgm_vol_fade
+		}
+		if bgm_vol_fade <= -1000 { // 音楽が消えたら元に戻す
+			bgm_vol_fade = -1000
+			mmstop
+			mmvol 4 , bgm_vol
+			mmvol 5 , bgm_vol
+		}
+	} else {
+		mmstop
+	}
+
+return
+
+//================================================================
+// アニメーション
+//================================================================
+
+*Animation
+
+	switch cm // 移動時 [cm = 2] にアニメーションを動かす
+
+		case 0
+			ca = 0
+			drop_block_anime = 0
+		swbreak
+
+		case 1
+			ca = 0
+			drop_block_anime = 0
+		swbreak
+
+		case 2
+			ca += 1
+			if ca > 3 : ca = 0 // 0~3 を繰り返し
+			if drop_block_anime >= 4 { // 0~4 まで
+				drop_block_anime = 4
+			} else {
+				drop_block_anime += 1
+			}
+		swbreak
+
+	swend
+
+return
+
+//================================================================
+// タイトルを描画
+//================================================================
+
+*drawTitle
+
+	gmode 2
+	pos 4*ChipSize,1*ChipSize
+	gcopy 3 , 0*ChipSize,2*ChipSize , 12*ChipSize,5*ChipSize
+
+return
+
+//================================================================
+// セレクトカーソルのスクロールバーを描画
+//================================================================
+
+*drawSelectCursorScrollBar
+
+	// 左側
+
+	gmode 2
+	pos sbx*ChipSize,sby*ChipSize
+	gcopy 4 , 0*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	sbh_cnt = 1
+
+	repeat sbh - 1
+		gmode 2
+		pos sbx*ChipSize,(sby+sbh_cnt)*ChipSize
+		gcopy 4 , 0*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		sbh_cnt += 1
+	loop
+
+	gmode 2
+	pos sbx*ChipSize,(sby+sbh)*ChipSize
+	gcopy 4 , 0*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+	// 右側
+
+	gmode 2
+	pos (sbx+sbw)*ChipSize,sby*ChipSize
+	gcopy 4 , 1*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	sbh_cnt = 1
+
+	repeat sbh - 1
+		gmode 2
+		pos (sbx+sbw)*ChipSize,(sby+sbh_cnt)*ChipSize
+		gcopy 4 , 1*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		sbh_cnt += 1
+	loop
+
+	gmode 2
+	pos (sbx+sbw)*ChipSize,(sby+sbh)*ChipSize
+	gcopy 4 , 1*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+return
+
+//================================================================
+// セレクトカーソルを描画
+//================================================================
+
+*drawSelectCursor
+
+	redraw 0
+
+	switch cm
+
+		case 0 // 移動可能
+
+			gmode 2 // 緑のランプを点灯
+			pos cx*ChipSize,cy*ChipSize
+			gcopy 4 , 2*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			gmode 2 // フレーム1
+			pos (cx+1)*ChipSize,cy*ChipSize
+			gcopy 4 , 4*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			sbw_cnt = 2
+
+			repeat sbw - 2
+				gmode 2 // フレーム2
+				pos (cx+sbw_cnt)*ChipSize,cy*ChipSize
+				gcopy 4 , 5*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+				sbw_cnt += 1
+			loop
+
+			gmode 2 // フレーム3
+			pos (cx+sbw)*ChipSize,cy*ChipSize
+			gcopy 4 , 7*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+		swbreak
+
+		case 1 // 移動不可能
+
+			gmode 2 // 赤のランプを点灯
+			pos cx*ChipSize , cy*ChipSize
+			gcopy 4 , 3*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			gmode 2 // フレーム1
+			pos (cx+1)*ChipSize,cy*ChipSize
+			gcopy 4 , 4*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			sbw_cnt = 2
+
+			repeat sbw - 2
+				gmode 2 // フレーム2
+				pos (cx+sbw_cnt)*ChipSize,cy*ChipSize
+				gcopy 4 , 5*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+				sbw_cnt += 1
+			loop
+
+			gmode 2 // フレーム3
+			pos (cx+sbw)*ChipSize,cy*ChipSize
+			gcopy 4 , 7*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			cm = 0
+
+		swbreak
+
+		case 2 // 移動中
+
+			gosub *drawSelectCursorAnime
+
+		swbreak
+
+	swend
+
+	redraw 1
+
+return
+
+//================================================================
+// セレクトカーソルを描画 (移動中)
+//================================================================
+
+*drawSelectCursorAnime
+
+	anime_frame -= 4 // セレクトカーソルのアニメーションフレーム
+
+	switch cd
+
+		case 0 // ↑
+
+			gmode 2 // 赤のランプを点灯
+			pos cx*ChipSize , cy*ChipSize + anime_frame*zoom
+			gcopy 4 , 3*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			gmode 2 // フレーム1
+			pos (cx+1)*ChipSize,cy * ChipSize + anime_frame*zoom
+			gcopy 4 , 4*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			sbw_cnt = 2
+
+			repeat sbw - 2
+				gmode 2 // フレーム2
+				pos (cx+sbw_cnt)*ChipSize , cy*ChipSize + anime_frame*zoom
+				gcopy 4 , 5*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+				sbw_cnt += 1
+			loop
+
+			gmode 2 // フレーム3
+			pos (cx+sbw)*ChipSize,cy * ChipSize + anime_frame*zoom
+			gcopy 4 , 7*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 12 : if se_mute = 0 : mmplay 1
+
+		swbreak
+
+		case 1 // ↓
+
+			gmode 2 // 赤のランプを点灯
+			pos cx*ChipSize , cy*ChipSize - anime_frame*zoom
+			gcopy 4 , 3*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			gmode 2 // フレーム1
+			pos (cx+1)*ChipSize,cy * ChipSize - anime_frame*zoom
+			gcopy 4 , 4*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			sbw_cnt = 2
+
+			repeat sbw - 2
+				gmode 2 // フレーム2
+				pos (cx+sbw_cnt)*ChipSize , cy*ChipSize - anime_frame*zoom
+				gcopy 4 , 5*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+				sbw_cnt += 1
+			loop
+
+			gmode 2 // フレーム3
+			pos (cx+sbw)*ChipSize,cy * ChipSize - anime_frame*zoom
+			gcopy 4 , 7*ChipSize,0*ChipSize , 1*ChipSize,3*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 12 : if se_mute = 0 : mmplay 1
+
+		swbreak
+
+	swend
+
+return
+
+//================================================================
+// マップを描画
+//================================================================
+
+*drawMap
+
+	mx = 0 // X座標を保持するための変数
+	my = 0 // Y座標を保持するための変数
+
+	repeat length(map)
+		repeat length2(map) // チップ判別
+
+	// 0x : スタート・ゴール・穴・テスト用
+
+			if map(mx,my) = 00 { // 穴
+			}
+
+			if map(mx,my) = 01 { // テスト用のブロック
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 02 { // テスト用のブロック(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0+1*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 03 { // スタート
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize,4*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 04 { // ゴール
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 7*ChipSize,4*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+	// 1x : 壁
+
+			if map(mx,my) = 11 { // 壁(左上)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,4*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 12 { // 壁(中上)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 1*ChipSize,4*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 13 { // 壁(右上)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,4*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 14 { // 壁(左中)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,5*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 15 { // 壁(中中)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 1*ChipSize,5*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 16 { // 壁(右中)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,5*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 17 { // 壁(左下)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,6*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 18 { // 壁(中下)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 1*ChipSize,6*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 19 { // 壁(左下)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,6*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+	// 2x : 数字ブロック
+
+			if map(mx,my) = 21 { // ブロック1
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 22 { // ブロック2
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 23 { // ブロック3
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 24 { // ブロック4
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 25 { // ブロック5
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 26 { // ブロック6
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 27 { // ブロック7
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+	// 3x : 数字ブロック(2)
+
+			if map(mx,my) = 31 { // ブロック1(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize+1*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 32 { // ブロック2(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize+1*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 33 { // ブロック3(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize+1*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 34 { // ブロック4(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize+1*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 35 { // ブロック5(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize+1*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 36 { // ブロック6(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize+1*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 37 { // ブロック7(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize+1*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+	// 4x : 特殊ブロック
+
+			if map(mx,my) = 41 { // 上だけ
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 42 { // 下だけ
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 43 { // 右だけ
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 44 { // 左だけ
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 45 { // ジャンプ台
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize,3*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+	// 5x : 特殊ブロック(2)
+
+			if map(mx,my) = 51 { // 上だけ(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize+1*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 52 { // 下だけ(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 2*ChipSize+1*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 53 { // 右だけ(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 4*ChipSize+1*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 54 { // 左だけ(2)
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 6*ChipSize+1*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			if map(mx,my) = 55 { // ジャンプ台
+				gmode 0
+				pos mx*ChipSize,my*ChipSize
+				gcopy 1 , 0*ChipSize+1*ChipSize*jump_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+			}
+
+			mx += 1 // 次の列へ
+		loop
+		my += 1 : mx = 0 // 次の行へ
+	loop
+
+return
+
+//================================================================
+// ブロックの踏み
+//================================================================
+
+*drawStep
+
+	if map(cx,cy) = 01 : map(cx,cy) = 02 // テスト用のブロック
+	if map(cx,cy) = 21 : map(cx,cy) = 31 // ブロック1
+	if map(cx,cy) = 22 : map(cx,cy) = 32 // ブロック2
+	if map(cx,cy) = 23 : map(cx,cy) = 33 // ブロック3
+	if map(cx,cy) = 24 : map(cx,cy) = 34 // ブロック4
+	if map(cx,cy) = 25 : map(cx,cy) = 35 // ブロック5
+	if map(cx,cy) = 26 : map(cx,cy) = 36 // ブロック6
+	if map(cx,cy) = 27 : map(cx,cy) = 37 // ブロック7
+	if map(cx,cy) = 41 : map(cx,cy) = 51 // 上だけ
+	if map(cx,cy) = 42 : map(cx,cy) = 52 // 下だけ
+	if map(cx,cy) = 43 : map(cx,cy) = 53 // 右だけ
+	if map(cx,cy) = 44 : map(cx,cy) = 54 // 左だけ
+
+return
+
+//================================================================
+// ブロックの落下＆カウント
+//================================================================
+
+*drawDrop
+
+	if cm = 2 {
+
+		switch key
+
+			case 1 // ←
+
+				if drop_block_anime >= 4 { // アニメーションが終わったら穴へ
+
+					gmode 0
+					pos cx*ChipSize + 1*ChipSize , cy*ChipSize
+
+				} else {
+
+					if map(cx+1,cy) = 02 { // テスト用ブロックの落下アニメーション
+						gmode 0
+						pos cx*ChipSize + ChipSize , cy*ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+					if map(cx+1,cy) = 31 { // ブロック1の落下アニメーション
+						gmode 0
+						pos cx*ChipSize + ChipSize , cy*ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+				}
+
+				if map(cx+1,cy) = 02 : map(cx+1,cy) = 00 // ブロックの数字を減らす
+				if map(cx+1,cy) = 31 : map(cx+1,cy) = 00
+				if map(cx+1,cy) = 32 : map(cx+1,cy) = 21
+				if map(cx+1,cy) = 33 : map(cx+1,cy) = 22
+				if map(cx+1,cy) = 34 : map(cx+1,cy) = 23
+				if map(cx+1,cy) = 35 : map(cx+1,cy) = 24
+				if map(cx+1,cy) = 36 : map(cx+1,cy) = 25
+				if map(cx+1,cy) = 37 : map(cx+1,cy) = 26
+
+			swbreak
+
+			case 2 // ↑
+
+				if drop_block_anime >= 4 { // アニメーションが終わったら穴へ
+
+					gmode 0
+					pos cx*ChipSize , cy*ChipSize + 1*ChipSize
+
+				} else {
+
+					if map(cx,cy+1) = 02 { // テスト用ブロックの落下アニメーション
+						gmode 0
+						pos cx*ChipSize , cy*ChipSize + ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+					if map(cx,cy+1) = 31 { // ブロック1の落下アニメーション
+						gmode 0
+						pos cx*ChipSize , cy*ChipSize + ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+				}
+
+				if map(cx,cy+1) = 02 : map(cx,cy+1) = 00 // ブロックの数字を減らす
+				if map(cx,cy+1) = 31 : map(cx,cy+1) = 00
+				if map(cx,cy+1) = 32 : map(cx,cy+1) = 21
+				if map(cx,cy+1) = 33 : map(cx,cy+1) = 22
+				if map(cx,cy+1) = 34 : map(cx,cy+1) = 23
+				if map(cx,cy+1) = 35 : map(cx,cy+1) = 24
+				if map(cx,cy+1) = 36 : map(cx,cy+1) = 25
+				if map(cx,cy+1) = 37 : map(cx,cy+1) = 26
+
+			swbreak
+
+			case 4 // →
+
+				if drop_block_anime >= 4 { // アニメーションが終わったら穴へ
+
+					gmode 0
+					pos cx*ChipSize - 1*ChipSize , cy*ChipSize
+
+				} else {
+
+					if map(cx-1,cy) = 02 { // テスト用ブロックの落下アニメーション
+						gmode 0
+						pos cx*ChipSize - ChipSize , cy*ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+					if map(cx-1,cy) = 31 { // ブロック1の落下アニメーション
+						gmode 0
+						pos cx*ChipSize - ChipSize , cy*ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+				}
+
+				if map(cx-1,cy) = 02 : map(cx-1,cy) = 00 // ブロックの数字を減らす
+				if map(cx-1,cy) = 31 : map(cx-1,cy) = 00
+				if map(cx-1,cy) = 32 : map(cx-1,cy) = 21
+				if map(cx-1,cy) = 33 : map(cx-1,cy) = 22
+				if map(cx-1,cy) = 34 : map(cx-1,cy) = 23
+				if map(cx-1,cy) = 35 : map(cx-1,cy) = 24
+				if map(cx-1,cy) = 36 : map(cx-1,cy) = 25
+				if map(cx-1,cy) = 37 : map(cx-1,cy) = 26
+
+			swbreak
+
+			case 8 // ↓
+
+				if drop_block_anime >= 4 { // アニメーションが終わったら穴へ
+
+					gmode 0
+					pos cx*ChipSize , cy*ChipSize - 1*ChipSize
+
+				} else {
+
+					if map(cx,cy-1) = 02 { // テスト用ブロックの落下アニメーション
+						gmode 0
+						pos cx*ChipSize , cy*ChipSize - ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+					if map(cx,cy-1) = 31 { // ブロック1の落下アニメーション
+						gmode 0
+						pos cx*ChipSize , cy*ChipSize - ChipSize
+						gcopy 1 , 4*ChipSize+1*ChipSize*drop_block_anime,3*ChipSize , 1*ChipSize,1*ChipSize
+					}
+
+				}
+
+				if map(cx,cy-1) = 02 : map(cx,cy-1) = 00 // ブロックの数字を減らす
+				if map(cx,cy-1) = 31 : map(cx,cy-1) = 00
+				if map(cx,cy-1) = 32 : map(cx,cy-1) = 21
+				if map(cx,cy-1) = 33 : map(cx,cy-1) = 22
+				if map(cx,cy-1) = 34 : map(cx,cy-1) = 23
+				if map(cx,cy-1) = 35 : map(cx,cy-1) = 24
+				if map(cx,cy-1) = 36 : map(cx,cy-1) = 25
+				if map(cx,cy-1) = 37 : map(cx,cy-1) = 26
+
+			swbreak
+
+		swend
+
+	}
+
+return
+
+//================================================================
+// キャラクターを描画
+//================================================================
+
+// 通常
+//----------------------------------------------------------------
+
+*drawChar1
+
+	redraw 0
+
+	if cm = 2 { // 移動中はアニメーションを描画
+
+		gosub *drawCharAnime
+
+	} else {
+
+		color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+		pos cx*ChipSize,cy*ChipSize
+		gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+		color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+		pos cx*ChipSize,cy*ChipSize-ChipSize
+		gcopy 2 , 1*ChipSize*ca,2*ChipSize*cd , 1*ChipSize,2*ChipSize
+
+	}
+
+	redraw 1
+
+return
+
+// 喜ぶ
+//----------------------------------------------------------------
+
+*drawChar2
+
+	redraw 0
+
+	if cm != 2 {
+
+		color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+		pos cx*ChipSize,cy*ChipSize
+		gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+		color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+		pos cx*ChipSize,cy*ChipSize-ChipSize
+		gcopy 2 , 6*ChipSize,0*ChipSize , 1*ChipSize,2*ChipSize
+
+	}
+
+	redraw 1
+
+return
+
+// 悩む
+//----------------------------------------------------------------
+
+*drawChar3
+
+	redraw 0
+
+	if cm != 2 {
+
+		color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+		pos cx*ChipSize,cy*ChipSize
+		gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+		color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+		pos cx*ChipSize,cy*ChipSize-ChipSize
+		gcopy 2 , 5*ChipSize,0 , 1*ChipSize,2*ChipSize
+
+	}
+
+	redraw 1
+
+return
+
+//================================================================
+// キャラクターを描画 (移動中)
+//================================================================
+
+*drawCharAnime
+
+	anime_frame -= 4 // キャラクターのアニメーションフレーム
+
+	switch cd
+
+		case 0 // ↓
+
+			color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+			pos cx*ChipSize , cy*ChipSize - anime_frame*zoom
+			gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+			color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+			pos cx*ChipSize , cy*ChipSize - anime_frame*zoom - ChipSize
+			gcopy 2 , 1*ChipSize*ca,2*ChipSize*cd , 1*ChipSize,2*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 0 : if success = 1 : if se_mute = 0 : mmplay 3
+
+		swbreak
+
+		case 1 // ↑
+
+			color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+			pos cx*ChipSize , cy*ChipSize + anime_frame*zoom
+			gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+			color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+			pos cx*ChipSize , cy*ChipSize + anime_frame*zoom - ChipSize
+			gcopy 2 , 1*ChipSize*ca,2*ChipSize*cd , 1*ChipSize,2*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 0 : if success = 1 : if se_mute = 0 : mmplay 3
+
+		swbreak
+
+		case 2 // ←
+
+			color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+			pos cx*ChipSize + anime_frame*zoom , cy*ChipSize
+			gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+			color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+			pos cx*ChipSize + anime_frame*zoom , cy*ChipSize - ChipSize
+			gcopy 2 , 1*ChipSize*ca,2*ChipSize*cd , 1*ChipSize,2*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 0 : if success = 1 : if se_mute = 0 : mmplay 3
+
+		swbreak
+
+		case 3 // →
+
+			color 100,90,200 : gmode 4 , 100,90,200 // 影を描画
+			pos cx*ChipSize - anime_frame*zoom , cy*ChipSize
+			gcopy 2 , 4*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+
+			color 100,90,200 : gmode 4 , 100,90,200 // キャラクターを描画
+			pos cx*ChipSize - anime_frame*zoom , cy*ChipSize - ChipSize
+			gcopy 2 , 1*ChipSize*ca,2*ChipSize*cd , 1*ChipSize,2*ChipSize
+
+			if anime_frame = 0 : cm = 0
+			if anime_frame = 0 : if success = 1 : if se_mute = 0 : mmplay 3
+
+		swbreak
+
+	swend
+
+return
+
+//================================================================
+// テキストボックスを描画
+//================================================================
+
+*drawTextBox
+
+	// 背景左側
+
+	gmode 3 , , , 0
+	pos mbx*ChipSize,mby*ChipSize
+	gcopy 4 , 13*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	mbh_cnt = 1
+
+	repeat mbh - 1
+		gmode 3 , , , 0
+		pos mbx*ChipSize,(mby+mbh_cnt)*ChipSize
+		gcopy 4 , 13*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		mbh_cnt += 1
+	loop
+
+	gmode 3 , , , 0
+	pos mbx*ChipSize,(mby+mbh)*ChipSize
+	gcopy 4 , 13*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+	// 背景右側
+
+	gmode 3 , , , 0
+	pos (mbx+mbw)*ChipSize,mby*ChipSize
+	gcopy 4 , 15*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	mbh_cnt = 1
+
+	repeat mbh - 1
+		gmode 3 , , , 0
+		pos (mbx+mbw)*ChipSize,(mby+mbh_cnt)*ChipSize
+		gcopy 4 , 15*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		mbh_cnt += 1
+	loop
+
+	gmode 3 , , , 0
+	pos (mbx+mbw)*ChipSize,(mby+mbh)*ChipSize
+	gcopy 4 , 15*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+	// 背景上側
+
+	mbw_cnt = 1
+
+	repeat mbw - 1
+		gmode 3 , , , 0
+		pos (mbx+mbw_cnt)*ChipSize,mby*ChipSize
+		gcopy 4 , 14*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+		mbw_cnt += 1
+	loop
+
+	// 背景下側
+
+	mbw_cnt = 1
+
+	repeat mbw - 1
+		gmode 3 , , , 0
+		pos (mbx+mbw_cnt)*ChipSize,(mby+mbh)*ChipSize
+		gcopy 4 , 14*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+		mbw_cnt += 1
+	loop
+
+	// 背景中側
+
+	mbh_cnt = 1
+	mbw_cnt = 1
+
+	repeat mbh - 1
+		repeat mbw - 1
+			gmode 3 , , , 127
+			pos (mbx+mbw_cnt)*ChipSize,(mby+mbh_cnt)*ChipSize
+			gcopy 4 , 14*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+			mbw_cnt += 1
+		loop
+		mbh_cnt += 1
+		mbw_cnt = 1
+	loop
+
+	// 左側
+
+	gmode 2
+	pos mbx*ChipSize,mby*ChipSize
+	gcopy 4 , 8*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	mbh_cnt = 1
+
+	repeat mbh - 1
+		gmode 2
+		pos mbx*ChipSize,(mby+mbh_cnt)*ChipSize
+		gcopy 4 , 8*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		mbh_cnt += 1
+	loop
+
+	gmode 2
+	pos mbx*ChipSize,(mby+mbh)*ChipSize
+	gcopy 4 , 8*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+	// 右側
+
+	gmode 2
+	pos (mbx+mbw)*ChipSize,mby*ChipSize
+	gcopy 4 , 12*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+
+	mbh_cnt = 1
+
+	repeat mbh - 1
+		gmode 2
+		pos (mbx+mbw)*ChipSize,(mby+mbh_cnt)*ChipSize
+		gcopy 4 , 12*ChipSize,1*ChipSize , 1*ChipSize,1*ChipSize
+		mbh_cnt += 1
+	loop
+
+	gmode 2
+	pos (mbx+mbw)*ChipSize,(mby+mbh)*ChipSize
+	gcopy 4 , 12*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+
+	// 上側
+
+	gmode 2
+	pos (mbx+1)*ChipSize,mby*ChipSize
+	gcopy 4 , 9*ChipSize,0*ChipSize , 2*ChipSize,1*ChipSize
+
+	mbw_cnt = 1
+
+	repeat mbw - 3
+		gmode 2
+		pos (mbx+mbw_cnt+2)*ChipSize,mby*ChipSize
+		gcopy 4 , 11*ChipSize,0*ChipSize , 1*ChipSize,1*ChipSize
+		mbw_cnt += 1
+	loop
+
+	// 下側
+
+	mbw_cnt = 1
+
+	repeat mbw - 1
+		gmode 2
+		pos (mbx+mbw_cnt)*ChipSize,(mby+mbh)*ChipSize
+		gcopy 4 , 9*ChipSize,2*ChipSize , 1*ChipSize,1*ChipSize
+		mbw_cnt += 1
+	loop
+
+return
+
+*EoF_Graphic
